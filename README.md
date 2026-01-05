@@ -1,79 +1,87 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Pig Weight Camera App
 
-# Getting Started
+Minimal React Native (0.74.3) app to capture consistent, landscape pig side-view photos with the main rear wide camera. Includes overlay guides, locked 1× zoom, and saves shots to the gallery while logging metadata for ML calibration.
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+## Project layout
+- `App.js`: Entry point wiring the camera screen.
+- `CameraScreen.js`: Camera logic, permission handling, capture/save flow, and metadata logging.
+- `PigFramingOverlay.js`: Overlay with guide lines and instructional text for framing pigs.
+- `package.json`: Dependencies for React Native, `react-native-vision-camera`, and `@react-native-camera-roll/camera-roll`.
 
-## Step 1: Start the Metro Server
+## Running the app
+1. Install dependencies with your preferred package manager (Node 18.20.8 recommended):
+   ```sh
+   npm install
+   # or
+   yarn install
+   ```
+2. Install native pods (iOS):
+   ```sh
+   cd ios && pod install
+   ```
+3. Start Metro and run on device/emulator:
+   ```sh
+   npm run start
+   npm run android
+   # or
+   npm run ios
+   ```
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+## Key behaviours
+- Requests camera (and Android storage) permissions on launch; shows a retry button if denied.
+- Uses only the rear **wide/main 1×** camera via `useCameraDevices('wide-angle-camera')`; disables camera switching.
+- Locks zoom to the device’s neutral zoom (1×) and disables zoom gestures.
+- Chooses a 4:3 photo format when available.
+- Landscape-friendly layout with full-screen preview, right-side capture button, and overlay guides.
+- Captures photos with `takePhoto`, saves to the gallery via `CameraRoll.save`, then logs URI, dimensions, and any available EXIF metadata.
 
-To start Metro, run the following command from the _root_ of your React Native project:
+## Android configuration
+Add required permissions and lock orientation in `android/app/src/main/AndroidManifest.xml`:
+```xml
+<manifest ...>
+  <uses-permission android:name="android.permission.CAMERA" />
+  <!-- For saving to gallery on Android 13+ -->
+  <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  <!-- For Android 12 and below -->
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
-```bash
-# using npm
-npm start
-
-# OR using Yarn
-yarn start
+  <application ...>
+    <activity
+      android:name=".MainActivity"
+      android:label="Pig Weight Camera"
+      android:screenOrientation="landscape"
+      android:exported="true"
+      ...>
+      <!-- other config -->
+    </activity>
+  </application>
+</manifest>
 ```
 
-## Step 2: Start your Application
-
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
-
-### For Android
-
-```bash
-# using npm
-npm run android
-
-# OR using Yarn
-yarn android
+## iOS configuration
+Add camera and photo library usage descriptions plus landscape-only orientation in `ios/YourApp/Info.plist`:
+```xml
+<key>NSCameraUsageDescription</key>
+<string>Capture side-view pig photos for weight estimation.</string>
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>Save pig photos to your photo library for the ML dataset.</string>
+<key>UIRequiresPersistentWiFi</key>
+<false/>
+<key>UISupportedInterfaceOrientations</key>
+<array>
+  <string>UIInterfaceOrientationLandscapeLeft</string>
+  <string>UIInterfaceOrientationLandscapeRight</string>
+</array>
+<key>UISupportedInterfaceOrientations~ipad</key>
+<array>
+  <string>UIInterfaceOrientationLandscapeLeft</string>
+  <string>UIInterfaceOrientationLandscapeRight</string>
+</array>
 ```
 
-### For iOS
+## Notes
+- The overlay uses absolute positioning and `pointerEvents="none"` so the capture button stays tappable.
+- Metadata availability depends on the device/OS; logs may include focal length, ISO, shutter speed, etc. when provided by the native camera APIs.
+- Keep devices roughly 3m away and 0.75m high as guided by on-screen text for consistent ML-ready captures.
 
-```bash
-# using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
-
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
-
-## Step 3: Modifying your App
-
-Now that you have successfully run the app, let's modify it.
-
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
-
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
